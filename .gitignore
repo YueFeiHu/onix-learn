@@ -1,4 +1,4 @@
-src/boot.bin
+src/*.bin
 src/master.img
 src/bx_enh_dbg.ini
 src/bochsrc

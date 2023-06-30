@@ -21,12 +21,16 @@ mov si, booting_str
 call print
 
 mov edi, 0x1000 ;读取硬盘块到目标内存
-mov ecx, 0      ;起始扇区
-mov bl, 1       ;扇区数量
+mov ecx, 2      ;起始扇区
+mov bl, 4       ;扇区数量
 
 call read_disk
 
-;bochs 魔术断点，使程序停在此处
+cmp word [0x1000], 0x55aa
+jnz error
+
+jmp 0:0x1002
+
 
 ; 阻塞
 jmp $
@@ -69,7 +73,7 @@ read_disk:
     push cx
     call .waits ;等待数据准备完成
     call .reads ;读取一个扇区
-    pop cs
+    pop cx
     loop .read
   ret
 
@@ -112,6 +116,13 @@ print:
 
 booting_str:
   db "hello,world...",10,13,0 ; \n\r
+
+error:
+    mov si, .msg
+    call print
+    hlt; 让 CPU 停止
+    jmp $
+    .msg db "Booting Error!!!", 10, 13, 0
 
 ; 填充 0
 ; $ 表示当前指令地址，$$ 表示此section开始地址
