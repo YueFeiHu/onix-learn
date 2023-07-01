@@ -1,4 +1,6 @@
-src/*.bin
-src/master.img
-src/bx_enh_dbg.ini
-src/bochsrc
+
+*.img
+*.ini
+*.bin
+*.map
+*.o
