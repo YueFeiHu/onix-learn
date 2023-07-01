@@ -34,15 +34,23 @@ detect_memory:
 
     xchg bx, bx
 
-    mov cx, [ards_count]
-    mov si, 0
-.show:
-    mov eax, [ards_buffer + si]
-    mov ebx, [ards_buffer + si + 8]
-    mov edx, [ards_buffer + si + 16]
-    add si, 20
+    jmp prepare_protected_mode
+
+prepare_protected_mode:
     xchg bx, bx
-    loop .show
+    cli
+    in al, 0x92
+    or al, 0b10
+    out 0x92, al
+    
+    lgdt [gdt_ptr] ;加载gdt表到gdtr寄存器
+    mov eax, cr0
+    or eax, 1
+    mov cr0, eax
+    ; 搜索gdtr寄存器指向的gdt表
+    ; 找到code_selector对应的段，地址为基地址+protect_mode
+    ; cs寄存器会变成code_selector的值
+    jmp dword code_selector : protect_mode
 
 jmp $
 
@@ -71,6 +79,50 @@ error:
     jmp $
     .msg db "Loading Error!!!", 10, 13, 0
 
+[bits 32]
+protect_mode:
+    xchg bx, bx
+    mov ax, data_selector
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    mov esp, 0x10000
+    mov byte [0xb8000], 'p'
+    mov byte [0x200000], 'P'
+
+jmp $
+
+code_selector equ (1 << 3)
+data_selector equ (2 << 3)
+
+memory_base     equ 0 ;内存基地址
+memory_limit    equ ((1024*1024*1024*4)/(1024*4)-1) ;内存界限 = 4G / 4K -1
+
+gdt_ptr:
+    dw (gdt_end - gdt_base) - 1
+    dd gdt_base
+
+gdt_base:
+    dd 0, 0; 第一个描述符为空
+gdt_code:
+    dw memory_limit & 0xffff ;段界限 0-15
+    dw memory_base  & 0xffff ;段基址 0-15
+    db (memory_base >> 16) & 0xff ;段基址 16-23
+    db 0b1_00_1_1_0_1_0; Access Right
+    db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf
+    db (memory_base >> 24) & 0xff ;段基址 
+
+gdt_data:
+    dw memory_limit & 0xffff ;段界限 0-15
+    dw memory_base  & 0xffff ;段基址 0-15
+    db (memory_base >> 16) & 0xff ;段基址 16-23
+    db 0b1_00_1_0_0_1_0; Access Right
+    db 0b1_1_0_0_0000 | (memory_limit >> 16) & 0xf
+    db (memory_base >> 24) & 0xff ;段基址 
+gdt_end:
 ards_count:
     dw 0
 ards_buffer:
