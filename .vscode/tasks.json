@@ -9,6 +9,7 @@
                 "-m32", // 32 位的程序
                 "-g",
                 "-I${workspaceFolder}/src/include",
+                "-I/usr/include/i386-linux-gnu",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}.out"
