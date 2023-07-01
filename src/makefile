@@ -55,3 +55,36 @@ clean:
 .PHONY: bochs
 bochs: $(BUILD)/master.img
 	bochs -q
+
+
+.PHONY: qemu-gui
+qemu-gui: $(BUILD)/master.img
+	qemu-system-i386 \
+	-m 32M \
+	-boot c \
+	-hda $<
+
+.PHONY: qemu-gui-g
+qemug-gui-g: $(BUILD)/master.img
+	qemu-system-i386 \
+	-s -S \
+	-m 32M \
+	-boot c \
+	-hda $<
+
+.PHONY: qemu
+qemu: $(BUILD)/master.img
+	qemu-system-i386 \
+	-m 32M \
+	-boot c \
+	-nographic \
+	-hda $<
+
+.PHONY: qemug
+qemug: $(BUILD)/master.img
+	qemu-system-i386 \
+	-s -S \
+	-m 32M \
+	-boot c \
+	-nographic \
+	-hda $<
