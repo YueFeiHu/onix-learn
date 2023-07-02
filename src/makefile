@@ -1,6 +1,6 @@
 BUILD:= ../build
 SRC:=.
-
+TESTS:=../tests
 ENTRYPOINT:=0x10000
 
 CFLAGS:= -m32 # 32 位的程序
@@ -27,9 +27,14 @@ $(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
+$(BUILD)/lib/%.o: $(SRC)/lib/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
+
 $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/main.o	\
-										 $(BUILD)/kernel/io.o
+										 $(BUILD)/kernel/io.o \
+										 $(BUILD)/lib/string.o
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
@@ -52,7 +57,7 @@ test : $(BUILD)/master.img
 .PHONY: clean
 clean:
 	find $(BUILD) ! -name 'master.img' -type f -exec rm -rf {} +
-
+	rm -rf $(TESTS)/*.out
 .PHONY: bochs
 bochs: $(BUILD)/master.img
 	bochs -q
