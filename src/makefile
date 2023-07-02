@@ -34,7 +34,10 @@ $(BUILD)/lib/%.o: $(SRC)/lib/%.c
 $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/main.o	\
 										 $(BUILD)/kernel/io.o \
-										 $(BUILD)/lib/string.o
+										 $(BUILD)/lib/string.o \
+										 $(BUILD)/kernel/console.o \
+										 $(BUILD)/lib/vsprintf.o \
+										 $(BUILD)/kernel/printk.o
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
@@ -70,8 +73,8 @@ qemu-gui: $(BUILD)/master.img
 	-boot c \
 	-hda $<
 
-.PHONY: qemu-gui-g
-qemug-gui-g: $(BUILD)/master.img
+.PHONY: qemug-gui
+qemug-gui: $(BUILD)/master.img
 	qemu-system-i386 \
 	-s -S \
 	-m 32M \
