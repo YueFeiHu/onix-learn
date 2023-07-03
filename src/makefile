@@ -40,7 +40,9 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/printk.o \
 										 $(BUILD)/kernel/assert.o \
 										 $(BUILD)/kernel/task.o \
-										 $(BUILD)/kernel/schedule.o
+										 $(BUILD)/kernel/schedule.o \
+										 $(BUILD)/kernel/debug.o \
+										 $(BUILD)/kernel/global.o 
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
