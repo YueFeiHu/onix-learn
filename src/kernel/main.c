@@ -5,12 +5,11 @@
 #include <onix/console.h>
 #include <onix/printk.h>
 #include <onix/assert.h>
+#include <onix/task.h>
 
 void kernel_init()
 {
     console_init();
-    assert(3 < 5);
-    // assert(3 > 5);
-    panic("Out of Memory");
+    task_init();
     return;
 }

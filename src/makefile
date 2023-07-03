@@ -21,7 +21,7 @@ $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 
 $(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
 	$(shell mkdir -p $(dir $@))
-	nasm -f elf32 $(DEBUG) $< -o $@
+	nasm -f elf32 -gdwarf $< -o $@
 
 $(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
 	$(shell mkdir -p $(dir $@))
@@ -39,6 +39,8 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/lib/vsprintf.o \
 										 $(BUILD)/kernel/printk.o \
 										 $(BUILD)/kernel/assert.o \
+										 $(BUILD)/kernel/task.o \
+										 $(BUILD)/kernel/schedule.o
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
