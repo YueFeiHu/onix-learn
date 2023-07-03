@@ -42,7 +42,10 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/task.o \
 										 $(BUILD)/kernel/schedule.o \
 										 $(BUILD)/kernel/debug.o \
-										 $(BUILD)/kernel/global.o 
+										 $(BUILD)/kernel/global.o \
+										 $(BUILD)/kernel/handler.o \
+										 $(BUILD)/kernel/interrupt.o 
+										 
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
@@ -68,7 +71,7 @@ clean:
 	rm -rf $(TESTS)/*.out
 .PHONY: bochs
 bochs: $(BUILD)/master.img
-	bochs -q
+	bochs -q -f ../bochs/bochsrc
 
 
 .PHONY: qemu-gui

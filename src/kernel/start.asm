@@ -4,9 +4,6 @@ extern kernel_init
 
 global _start
 _start:
-    xchg bx, bx
-    mov byte [0xb8000], 0x55; 表示进入了内核
-    xchg bx, bx
     call kernel_init
-    xchg bx, bx
+    int 0x80
     jmp $; 阻塞
