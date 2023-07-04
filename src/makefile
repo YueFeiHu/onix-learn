@@ -44,7 +44,8 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/debug.o \
 										 $(BUILD)/kernel/global.o \
 										 $(BUILD)/kernel/handler.o \
-										 $(BUILD)/kernel/interrupt.o 
+										 $(BUILD)/kernel/interrupt.o \
+										 $(BUILD)/lib/stdlib.o
 										 
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
