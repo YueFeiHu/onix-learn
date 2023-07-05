@@ -47,6 +47,7 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/interrupt.o \
 										 $(BUILD)/kernel/clock.o \
 										 $(BUILD)/kernel/time.o \
+										 $(BUILD)/kernel/rtc.o \
 										 $(BUILD)/lib/stdlib.o
 										 
 	$(shell mkdir -p $(dir $@))
