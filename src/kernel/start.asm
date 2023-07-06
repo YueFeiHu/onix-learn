@@ -1,8 +1,13 @@
 [bits 32]
 
-extern kernel_init
+extern console_init
+extern memory_init
 
 global _start
 _start:
-    call kernel_init
+    push ebx ; ards_count
+    push eax ; magic
+
+    call console_init
+    call memory_init
     jmp $; 阻塞

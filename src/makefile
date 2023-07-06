@@ -48,6 +48,7 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/clock.o \
 										 $(BUILD)/kernel/time.o \
 										 $(BUILD)/kernel/rtc.o \
+										 $(BUILD)/kernel/memory.o \
 										 $(BUILD)/lib/stdlib.o
 										 
 	$(shell mkdir -p $(dir $@))
@@ -81,7 +82,7 @@ bochs: $(BUILD)/master.img
 .PHONY: qemu-gui
 qemu-gui: $(BUILD)/master.img
 	qemu-system-i386 \
-	-m 32M \
+	-m 132M \
 	-boot c \
 	-hda $<
 
@@ -89,7 +90,7 @@ qemu-gui: $(BUILD)/master.img
 qemug-gui: $(BUILD)/master.img
 	qemu-system-i386 \
 	-s -S \
-	-m 32M \
+	-m 132M \
 	-boot c \
 	-hda $<
 

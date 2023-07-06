@@ -25,7 +25,7 @@ detect_memory:
     jc error
 
     add di, cx
-    inc word [ards_count]
+    inc dword [ards_count]
     cmp ebx, 0
     jnz .next
 
@@ -94,7 +94,9 @@ protect_mode:
     mov bl, 200
 
     call read_disk
-    xchg bx, bx
+    ; 函数参数
+    mov eax, 0x20220205
+    mov ebx, ards_count
     jmp dword code_selector:0x10000
     ud2 ;表示出错
 
@@ -198,5 +200,5 @@ gdt_data:
     db (memory_base >> 24) & 0xff ;段基址 
 gdt_end:
 ards_count:
-    dw 0
+    dd 0
 ards_buffer:
