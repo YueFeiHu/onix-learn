@@ -13,6 +13,7 @@ extern void memory_test();
 extern void mapping_init();
 extern void mapping_test();
 extern void bitmap_tests();
+extern void memory_alloc_test();
 void kernel_init()
 {
     
@@ -24,7 +25,7 @@ void kernel_init()
     // rtc_init();
     // task_init();
     bitmap_tests();
-    
+    memory_alloc_test();
     // mapping_test();
     // asm volatile("sti");
     hang();

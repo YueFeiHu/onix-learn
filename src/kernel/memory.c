@@ -4,6 +4,7 @@
 #include <onix/assert.h>
 #include <onix/stdlib.h>
 #include <onix/string.h>
+#include <onix/bitmap.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -21,6 +22,10 @@ static u32 KERNEL_PAGE_TABLE[] = {
   0x2000,
   0x3000,
 };
+#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
+#define KERNEL_MAP_BITS 0x4000
+
+bitmap_t kernel_map;
 
 typedef struct ards_t
 {
@@ -91,6 +96,10 @@ void memory_map_init()
     memory_map[i] = 1;
   }
   LOGK("total pages %d free pages %d\n", total_pages, free_pages);
+
+  u32 length = (IDX(KERNEL_MEMORY_SIZE) - IDX(MEMORY_BASE)) / 8;
+  bitmap_init(&kernel_map, (u8*)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE));
+  bitmap_scan(&kernel_map, memory_map_pages);
 }
 
 static u32 get_page()
@@ -139,12 +148,12 @@ void memory_test()
   }
 }
 
-u32 inline get_cr3()
+u32  get_cr3()
 {
   asm volatile("movl %cr3, %eax\n");
 }
 
-void inline set_cr3(u32 pde)
+void  set_cr3(u32 pde)
 {
   ASSERT_PAGE(pde);
   asm volatile("movl %%eax, %%cr3\n" : : "a"(pde));
@@ -242,4 +251,63 @@ void mapping_test()
     ptr[0] = 'a';
     flush_tlb(vaddr);
     BMB;
+}
+
+static u32 scan_page(bitmap_t *map, u32 count)
+{
+  assert(count > 0);
+  u32 index = bitmap_scan(map, count);
+  if (index == EOF)
+  {
+    panic("Scan page fail");
+  }
+  u32 addr = PAGE(index);
+  LOGK("Scan page 0x%p count %d\n", addr, count);
+  return addr;
+}
+
+static void reset_page(bitmap_t *map, u32 addr, u32 count)
+{
+  ASSERT_PAGE(addr);
+  assert(count > 0);
+
+  u32 index = IDX(addr);
+
+  for (size_t i = 0; i < count ;i++)
+  {
+    assert(bitmap_test(map, index + i));
+    bitmap_set(map, index + i, 0);
+  }
+}
+
+static alloc_kpage(u32 count)
+{
+  assert(count > 0);
+  u32 vaddr = scan_page(&kernel_map, count);
+  LOGK("ALLOC kernel pages 0x%p count %d\n", vaddr, count);
+  return vaddr;
+}
+
+void free_kpage(u32 vaddr, u32 count)
+{
+    ASSERT_PAGE(vaddr);
+    assert(count > 0);
+    reset_page(&kernel_map, vaddr, count);
+    LOGK("FREE  kernel pages 0x%p count %d\n", vaddr, count);
+}
+
+void memory_alloc_test()
+{
+    u32 *pages = (u32 *)(0x200000);
+    u32 count = 0x6fe;
+    for (size_t i = 0; i < count; i++)
+    {
+        pages[i] = alloc_kpage(1);
+        LOGK("0x%x\n", i);
+    }
+
+    for (size_t i = 0; i < count; i++)
+    {
+        free_kpage(pages[i], 1);
+    }
 }
