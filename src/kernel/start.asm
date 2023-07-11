@@ -13,4 +13,7 @@ _start:
     call gdt_init       ; 全局描述符初始化
     call memory_init    ; 内存初始化
     call kernel_init    ; 内核初始化
+
+    mov eax, 0; 0 号系统调用
+    int 0x80;
     jmp $; 阻塞
