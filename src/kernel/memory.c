@@ -17,7 +17,7 @@
 #define PAGE(idx) ((u32)idx << 12)
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
-#define KERNEL_PAGE_DIR 0x1000
+
 static u32 KERNEL_PAGE_TABLE[] = {
   0x2000,
   0x3000,
@@ -280,7 +280,7 @@ static void reset_page(bitmap_t *map, u32 addr, u32 count)
   }
 }
 
-static alloc_kpage(u32 count)
+u32 alloc_kpage(u32 count)
 {
   assert(count > 0);
   u32 vaddr = scan_page(&kernel_map, count);

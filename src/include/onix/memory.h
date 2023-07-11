@@ -2,6 +2,7 @@
 #define ONIX_MEMORY_H
 #include <onix/types.h>
 
+#define KERNEL_PAGE_DIR 0x1000
 #define PAGE_SIZE 0x1000     // 一页的大小 4K
 #define MEMORY_BASE 0x100000 // 1M，可用内存开始的位置
 
@@ -22,4 +23,7 @@ typedef struct page_entry_t
 
 u32 get_cr3();
 void set_cr3(u32 pde);
+
+void free_kpage(u32 vaddr, u32 count);
+u32 alloc_kpage(u32 count);
 #endif

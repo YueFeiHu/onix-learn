@@ -35,29 +35,13 @@ void kernel_init()
     memory_map_init();
     mapping_init();
     interrupt_init();
-    // clock_init();
+    clock_init();
     // time_init();
     // rtc_init();
-    // task_init();
+    task_init();
     // bitmap_tests();
     // memory_alloc_test();
     // mapping_test();
     // asm volatile("sti");
-
-    bool intr = interrupt_disable();
     set_interrupt_state(true);
-
-    LOGK("%d\n", intr);
-    LOGK("%d\n", get_interrupt_state());
-
-    BMB;
-
-    intr = interrupt_disable();
-
-    BMB;
-    set_interrupt_state(true);
-
-    LOGK("%d\n", intr);
-    LOGK("%d\n", get_interrupt_state());
-    hang();
 }
