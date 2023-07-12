@@ -54,6 +54,7 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/gate.o \
 										 $(BUILD)/lib/syscall.o\
 										 $(BUILD)/lib/list.o\
+										 $(BUILD)/kernel/thread.o \
 										 
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
