@@ -1,4 +1,4 @@
-#include <onix/syscalll.h>
+#include <onix/syscall.h>
 
 static u32 _syscall0(u32 nr)
 {

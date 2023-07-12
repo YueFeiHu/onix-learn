@@ -5,7 +5,7 @@
 #include <onix/interrupt.h>
 #include <onix/string.h>
 #include <onix/bitmap.h>
-#include <onix/syscalll.h>
+#include <onix/syscall.h>
 
 extern bitmap_t kernel_map;
 extern void task_switch(task_t *next);

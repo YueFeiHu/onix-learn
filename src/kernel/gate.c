@@ -1,7 +1,7 @@
 #include <onix/interrupt.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
-#include <onix/syscalll.h>
+#include <onix/syscall.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 

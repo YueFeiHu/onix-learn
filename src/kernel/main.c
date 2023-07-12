@@ -19,6 +19,7 @@ extern void mapping_test();
 extern void bitmap_tests();
 extern void memory_alloc_test();
 extern void syscall_init();
+extern void list_test();
 void intr_test()
 {
     bool intr = interrupt_disable();
@@ -36,6 +37,7 @@ void kernel_init()
     mapping_init();
     interrupt_init();
     clock_init();
+    list_test();
     // time_init();
     // rtc_init();
     task_init();
@@ -44,5 +46,5 @@ void kernel_init()
     // mapping_test();
     // asm volatile("sti");
     syscall_init();
-    set_interrupt_state(true);
+    // set_interrupt_state(true);
 }
