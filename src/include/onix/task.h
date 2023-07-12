@@ -47,4 +47,5 @@ void task_init();
 
 task_t *running_task();
 void schedule();
+void task_yield();
 #endif

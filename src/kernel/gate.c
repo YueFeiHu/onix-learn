@@ -1,6 +1,7 @@
 #include <onix/interrupt.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
+#include <onix/syscalll.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -21,17 +22,18 @@ static void sys_default()
     panic("syscall not implemented!!!");
 }
 
-static u32 sys_test()
+static u32 sys_test(u32 a)
 {
-    LOGK("syscall test...\n");
+    LOGK("syscall test... %d\n", a);
     return 255;
 }
-
+extern void task_yield();
 void syscall_init()
 {
     for (size_t i = 0; i < SYSCALL_SIZE; i++)
     {
         syscall_table[i] = sys_default;
     }
-    syscall_table[0] = sys_test;
+    syscall_table[SYS_NR_TEST]  = sys_test;
+    syscall_table[SYS_NR_YIELD] = task_yield;
 }

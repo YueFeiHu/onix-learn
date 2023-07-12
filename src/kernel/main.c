@@ -38,11 +38,11 @@ void kernel_init()
     clock_init();
     // time_init();
     // rtc_init();
-    // task_init();
+    task_init();
     // bitmap_tests();
     // memory_alloc_test();
     // mapping_test();
     // asm volatile("sti");
     syscall_init();
-    // set_interrupt_state(true);
+    set_interrupt_state(true);
 }

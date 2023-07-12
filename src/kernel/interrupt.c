@@ -208,6 +208,7 @@ void idt_init()
     gate->segment = 0;       // 系统段
     gate->DPL = 3;           // 用户态
     gate->present = 1;       // 有效
+    
     idt_ptr.base = (u32)idt;
     idt_ptr.limit = sizeof(idt) - 1;
 
