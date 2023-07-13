@@ -187,15 +187,15 @@ syscall_handler:
     push 0x80; 向中断处理函数传递参数中断向量 vector
     xchg bx, bx
 
-    ;push edx; 第三个参数
-    ;push ecx; 第二个参数
-    ;push ebx; 第一个参数
+    push edx; 第三个参数
+    push ecx; 第二个参数
+    push ebx; 第一个参数
 
     ; 调用系统调用处理函数，syscall_table 中存储了系统调用处理函数的指针
     call [syscall_table + eax * 4]
 
     xchg bx, bx
-    ; add esp, 12; 系统调用结束恢复栈
+    add esp, 12; 系统调用结束恢复栈
 
     ; 修改栈中 eax 寄存器，设置系统调用返回值
     mov dword [esp + 8 * 4], eax

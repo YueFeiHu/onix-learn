@@ -92,7 +92,7 @@ qemu-gui: $(BUILD)/master.img
 	-hda $<
 
 .PHONY: qemug-gui
-qemug-gui: $(BUILD)/master.img
+qemu-gui-debug: $(BUILD)/master.img
 	qemu-system-i386 \
 	-s -S \
 	-m 132M \
@@ -108,7 +108,7 @@ qemu: $(BUILD)/master.img
 	-hda $<
 
 .PHONY: qemug
-qemug: $(BUILD)/master.img
+qemu-debug: $(BUILD)/master.img
 	qemu-system-i386 \
 	-s -S \
 	-m 32M \

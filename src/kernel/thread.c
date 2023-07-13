@@ -23,12 +23,21 @@ void idle_thread()
 void init_thread()
 {
     set_interrupt_state(true);
-
+    u32 counter = 0;
     while (true)
     {
-        LOGK("init task....\n");
-        task_t *task = running_task();
-        task_block(task, NULL, TASK_BLOCKED);
-        // test();
+        LOGK("init task %d....\n", counter++);
+        sleep(500);
+    }
+}
+
+void test_thread()
+{
+    set_interrupt_state(true);
+    u32 counter = 0;
+    while (true)
+    {
+        LOGK("test task %d....\n", counter++);
+        sleep(5000);
     }
 }
