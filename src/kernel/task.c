@@ -130,14 +130,15 @@ void task_wakeup()
     for (list_node_t *ptr = list->head.next; ptr != &list->tail;)
     {
         task_t *task = element_entry(task_t, node, ptr);
-        if (task->ticks > jiffies)
+        // jiffies随着时间增加
+        if (jiffies < task->ticks)
         {
             break;
         }
         // unblock 会将指针清空
         ptr = ptr->next;
-        task->node.next = NULL;
-        task->node.prev = NULL;
+        // task->node.next = NULL;
+        // task->node.prev = NULL;
         task->ticks = 0;
         task_unblock(task);
     }
@@ -150,7 +151,7 @@ void schedule()
     task_t *next = task_search(TASK_READY);
     assert(next != NULL);
     assert(next ->magic == ONIX_MAGIC);
-    if (current->state = TASK_RUNNING)
+    if (current->state == TASK_RUNNING)
     {
         current->state = TASK_READY;
     }
