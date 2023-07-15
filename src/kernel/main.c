@@ -15,6 +15,7 @@ extern void set_alarm(u32);
 extern void memory_map_init();
 extern void mapping_init();
 extern void syscall_init();
+extern void keyboard_init();
 
 void intr_test()
 {
@@ -33,6 +34,7 @@ void kernel_init()
     mapping_init();
     interrupt_init();
     clock_init();
+    keyboard_init();
     // time_init();
     // rtc_init();
     task_init();
