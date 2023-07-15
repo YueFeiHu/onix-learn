@@ -1,7 +1,8 @@
 BUILD:= ../build
 SRC:=.
 TESTS:=../tests
-ENTRYPOINT:=0x10000
+MULTIBOOT2:=0x10000
+ENTRYPOINT:=0x10040
 
 CFLAGS:= -m32 # 32 位的程序
 CFLAGS+= -fno-builtin	# 不需要 gcc 内置函数
@@ -31,6 +32,13 @@ $(BUILD)/lib/%.o: $(SRC)/lib/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
+LDFLAGS:= -m elf_i386 \
+		-static \
+		-Ttext $(ENTRYPOINT)\
+		--section-start=.multiboot2=$(MULTIBOOT2)
+LDFLAGS:=$(strip ${LDFLAGS})
+
+
 $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/main.o	\
 										 $(BUILD)/kernel/io.o \
@@ -58,7 +66,7 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/kernel/mutex.o \
 										 
 	$(shell mkdir -p $(dir $@))
-	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
+	ld ${LDFLAGS} $^ -o $@ 
 
 $(BUILD)/system.bin: $(BUILD)/kernel.bin
 	objcopy -O binary $< $@
@@ -74,6 +82,19 @@ $(BUILD)/master.img: $(BUILD)/boot/boot.bin \
 	dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 	dd if=$(BUILD)/system.bin of=$@ bs=512 count=200 seek=10 conv=notrunc
 
+$(BUILD)/kernel.iso : $(BUILD)/kernel.bin $(SRC)/utils/grub.cfg
+
+# 检测内核文件是否合法
+	grub-file --is-x86-multiboot2 $<
+# 创建 iso 目录
+	mkdir -p $(BUILD)/iso/boot/grub
+# 拷贝内核文件
+	cp $< $(BUILD)/iso/boot
+# 拷贝 grub 配置文件
+	cp $(SRC)/utils/grub.cfg $(BUILD)/iso/boot/grub
+# 生成 iso 文件
+	grub-mkrescue -o $@ $(BUILD)/iso
+
 test : $(BUILD)/master.img
 
 .PHONY: clean
@@ -85,12 +106,25 @@ bochs: $(BUILD)/master.img
 	bochs -q -f ../bochs/bochsrc
 
 
+QEMU:= qemu-system-i386 \
+	-m 32M \
+	-rtc base=localtime \
+
+QEMU_DISK:=-boot c \
+	-drive file=$(BUILD)/master.img,if=ide,index=0,media=disk,format=raw \
+
+QEMU_CDROM:=-boot d \
+	-drive file=$(BUILD)/kernel.iso,media=cdrom \
+
+QEMU_DEBUG:= -s -S
+
 .PHONY: qemu-gui
 qemu-gui: $(BUILD)/master.img
-	qemu-system-i386 \
-	-m 132M \
-	-boot c \
-	-hda $<
+	$(QEMU) $(QEMU_DISK)
+
+.PHONY: qemu-gui-cd
+qemu-gui-cd: $(BUILD)/kernel.iso
+	$(QEMU) $(QEMU_CDROM)
 
 .PHONY: qemug-gui
 qemu-gui-debug: $(BUILD)/master.img

@@ -5,6 +5,7 @@
 #include <onix/stdlib.h>
 #include <onix/string.h>
 #include <onix/bitmap.h>
+#include <onix/multiboot2.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -17,10 +18,9 @@
 #define PAGE(idx) ((u32)idx << 12)
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
-
 static u32 KERNEL_PAGE_TABLE[] = {
-  0x2000,
-  0x3000,
+    0x2000,
+    0x3000,
 };
 #define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
 #define KERNEL_MAP_BITS 0x4000
@@ -32,31 +32,59 @@ typedef struct ards_t
   u64 base;
   u64 size;
   u32 type;
-}_packed ards_t;
+} _packed ards_t;
 
 static u32 memory_base = 0;
 static u32 memory_size = 0;
 static u32 total_pages = 0;
-static u32 free_pages  = 0;
+static u32 free_pages = 0;
 
 #define used_pages (total_pages - free_pages)
 
 void memory_init(u32 magic, u32 addr)
 {
-  u32 count;
-  ards_t *ptr;
+  u32 count = 0;
   if (magic == ONIX_MAGIC)
   {
     count = *(u32 *)addr;
-    ptr = (ards_t*)(addr + 4);
+    ards_t *ptr = (ards_t *)(addr + 4);
     for (size_t i = 0; i < count; i++, ptr++)
     {
       LOGK("memory base 0x%p, size 0x%p, type %d\n", (u32)ptr->base, (u32)ptr->size, (u32)ptr->type);
       if (ptr->type == ZONE_VALID && ptr->size > memory_size)
       {
-          memory_base = (u32)ptr->base;
-          memory_size = (u32)ptr->size;
+        memory_base = (u32)ptr->base;
+        memory_size = (u32)ptr->size;
       }
+    }
+  }
+  else if (magic == MULTIBOOT2_MAGIC)
+  {
+    u32 size = *(unsigned int *)addr;
+    multi_tag_t *tag = (multi_tag_t *)(addr + 8);
+
+    LOGK("Announced mbi size 0x%x\n", size);
+    while (tag->type != MULTIBOOT_TAG_TYPE_END)
+    {
+      if (tag->type == MULTIBOOT_TAG_TYPE_MMAP)
+        break;
+      // 下一个 tag 对齐到了 8 字节
+      tag = (multi_tag_t *)((u32)tag + ((tag->size + 7) & ~7));
+    }
+
+    multi_tag_mmap_t *mtag = (multi_tag_mmap_t *)tag;
+    multi_mmap_entry_t *entry = mtag->entries;
+    while ((u32)entry < (u32)tag + tag->size)
+    {
+      LOGK("Memory base 0x%p size 0x%p type %d\n",
+           (u32)entry->addr, (u32)entry->len, (u32)entry->type);
+      count++;
+      if (entry->type == ZONE_VALID && entry->len > memory_size)
+      {
+        memory_base = (u32)entry->addr;
+        memory_size = (u32)entry->len;
+      }
+      entry = (multi_mmap_entry_t *)((u32)entry + mtag->entry_size);
     }
   }
   else
@@ -84,12 +112,12 @@ static u32 memory_map_pages;
 
 void memory_map_init()
 {
-  memory_map = (u8*)memory_base;
+  memory_map = (u8 *)memory_base;
   // 计算物理内存数组需要占用的页数
   memory_map_pages = div_round_up(total_pages, PAGE_SIZE);
   LOGK("memory map page count %d\n", memory_map_pages);
   free_pages -= memory_map_pages;
-  memset((void*)memory_map, 0, memory_map_pages * PAGE_SIZE);
+  memset((void *)memory_map, 0, memory_map_pages * PAGE_SIZE);
   start_page = IDX(MEMORY_BASE) + memory_map_pages;
   for (size_t i = 0; i < start_page; i++)
   {
@@ -98,7 +126,7 @@ void memory_map_init()
   LOGK("total pages %d free pages %d\n", total_pages, free_pages);
 
   u32 length = (IDX(KERNEL_MEMORY_SIZE) - IDX(MEMORY_BASE)) / 8;
-  bitmap_init(&kernel_map, (u8*)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE));
+  bitmap_init(&kernel_map, (u8 *)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE));
   bitmap_scan(&kernel_map, memory_map_pages);
 }
 
@@ -111,7 +139,7 @@ static u32 get_page()
       memory_map[i] = 1;
       free_pages--;
       assert(free_pages >= 0);
-      u32 page = ((u32) i) << 12;
+      u32 page = ((u32)i) << 12;
       LOGK("get page 0x%p\n", page);
       return page;
     }
@@ -138,52 +166,53 @@ static void put_page(u32 addr)
 void memory_test()
 {
   u32 pages[10];
-  for (size_t i = 0;i < 10; i++)
+  for (size_t i = 0; i < 10; i++)
   {
     pages[i] = get_page();
   }
-  for (size_t i = 0;i < 10; i++)
+  for (size_t i = 0; i < 10; i++)
   {
     put_page(pages[i]);
   }
 }
 
-u32  get_cr3()
+u32 get_cr3()
 {
   asm volatile("movl %cr3, %eax\n");
 }
 
-void  set_cr3(u32 pde)
+void set_cr3(u32 pde)
 {
   ASSERT_PAGE(pde);
-  asm volatile("movl %%eax, %%cr3\n" : : "a"(pde));
+  asm volatile("movl %%eax, %%cr3\n"
+               :
+               : "a"(pde));
 }
 
 // 将 cr0 寄存器最高位 PE 置为 1，启用分页
 static inline void enable_page()
 {
-    // 0b1000_0000_0000_0000_0000_0000_0000_0000
-    // 0x80000000
-    asm volatile(
-        "movl %cr0, %eax\n"
-        "orl $0x80000000, %eax\n"
-        "movl %eax, %cr0\n");
+  // 0b1000_0000_0000_0000_0000_0000_0000_0000
+  // 0x80000000
+  asm volatile(
+      "movl %cr0, %eax\n"
+      "orl $0x80000000, %eax\n"
+      "movl %eax, %cr0\n");
 }
 
 // 初始化页表项
 static void entry_init(page_entry_t *entry, u32 index)
 {
-    *(u32 *)entry = 0;
-    entry->present = 1;
-    entry->write = 1;
-    entry->user = 1;
-    entry->index = index;
+  *(u32 *)entry = 0;
+  entry->present = 1;
+  entry->write = 1;
+  entry->user = 1;
+  entry->index = index;
 }
-
 
 void mapping_init()
 {
-  page_entry_t *pde = (page_entry_t*)KERNEL_PAGE_DIR;
+  page_entry_t *pde = (page_entry_t *)KERNEL_PAGE_DIR;
   memset(pde, 0, PAGE_SIZE);
   idx_t index = 0;
   for (idx_t didx = 0; didx < sizeof(KERNEL_PAGE_TABLE) / 4; didx++)
@@ -221,36 +250,37 @@ static page_entry_t *get_pte(u32 vaddr)
 
 static void flush_tlb(u32 vaddr)
 {
-  asm volatile("invlpg (%0)" : 
-                             : "r"(vaddr)
-                             : "memory");
+  asm volatile("invlpg (%0)"
+               :
+               : "r"(vaddr)
+               : "memory");
 }
 
 void mapping_test()
 {
-    BMB;
+  BMB;
 
-    // 将 20 M 0x1400000 内存映射到 64M 0x4000000 的位置
+  // 将 20 M 0x1400000 内存映射到 64M 0x4000000 的位置
 
-    // 我们还需要一个页表，0x900000
+  // 我们还需要一个页表，0x900000
 
-    u32 vaddr = 0x4000000; // 线性地址几乎可以是任意的
-    u32 paddr = 0x1400000; // 物理地址必须要确定存在
-    u32 table = 0x900000;  // 页表也必须是物理地址
+  u32 vaddr = 0x4000000; // 线性地址几乎可以是任意的
+  u32 paddr = 0x1400000; // 物理地址必须要确定存在
+  u32 table = 0x900000;  // 页表也必须是物理地址
 
-    page_entry_t *pde = get_pde();
-    page_entry_t *dentry = &pde[DIDX(vaddr)]; 
-    entry_init(dentry, IDX(table)); // 指向页表的物理地址
+  page_entry_t *pde = get_pde();
+  page_entry_t *dentry = &pde[DIDX(vaddr)];
+  entry_init(dentry, IDX(table)); // 指向页表的物理地址
 
-    page_entry_t *pte = get_pte(vaddr);
-    page_entry_t *tentry = &pte[TIDX(vaddr)];
-    entry_init(tentry, IDX(paddr));
+  page_entry_t *pte = get_pte(vaddr);
+  page_entry_t *tentry = &pte[TIDX(vaddr)];
+  entry_init(tentry, IDX(paddr));
 
-    BMB;
-    char *ptr = (char *)(vaddr);
-    ptr[0] = 'a';
-    flush_tlb(vaddr);
-    BMB;
+  BMB;
+  char *ptr = (char *)(vaddr);
+  ptr[0] = 'a';
+  flush_tlb(vaddr);
+  BMB;
 }
 
 static u32 scan_page(bitmap_t *map, u32 count)
@@ -273,7 +303,7 @@ static void reset_page(bitmap_t *map, u32 addr, u32 count)
 
   u32 index = IDX(addr);
 
-  for (size_t i = 0; i < count ;i++)
+  for (size_t i = 0; i < count; i++)
   {
     assert(bitmap_test(map, index + i));
     bitmap_set(map, index + i, 0);
@@ -290,24 +320,24 @@ u32 alloc_kpage(u32 count)
 
 void free_kpage(u32 vaddr, u32 count)
 {
-    ASSERT_PAGE(vaddr);
-    assert(count > 0);
-    reset_page(&kernel_map, vaddr, count);
-    LOGK("FREE  kernel pages 0x%p count %d\n", vaddr, count);
+  ASSERT_PAGE(vaddr);
+  assert(count > 0);
+  reset_page(&kernel_map, vaddr, count);
+  LOGK("FREE  kernel pages 0x%p count %d\n", vaddr, count);
 }
 
 void memory_alloc_test()
 {
-    u32 *pages = (u32 *)(0x200000);
-    u32 count = 0x6fe;
-    for (size_t i = 0; i < count; i++)
-    {
-        pages[i] = alloc_kpage(1);
-        LOGK("0x%x\n", i);
-    }
+  u32 *pages = (u32 *)(0x200000);
+  u32 count = 0x6fe;
+  for (size_t i = 0; i < count; i++)
+  {
+    pages[i] = alloc_kpage(1);
+    LOGK("0x%x\n", i);
+  }
 
-    for (size_t i = 0; i < count; i++)
-    {
-        free_kpage(pages[i], 1);
-    }
+  for (size_t i = 0; i < count; i++)
+  {
+    free_kpage(pages[i], 1);
+  }
 }
