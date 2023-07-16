@@ -63,6 +63,7 @@ $(BUILD)/kernel.bin: $(BUILD)/kernel/start.o \
 										 $(BUILD)/lib/syscall.o\
 										 $(BUILD)/lib/list.o\
 										 $(BUILD)/lib/fifo.o\
+										 $(BUILD)/lib/printf.o\
 										 $(BUILD)/kernel/thread.o \
 										 $(BUILD)/kernel/mutex.o \
 										 $(BUILD)/kernel/keyboard.o \

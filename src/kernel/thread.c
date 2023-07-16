@@ -5,6 +5,7 @@
 #include <onix/mutex.h>
 #include <onix/printk.h>
 #include <onix/task.h>
+#include <onix/stdio.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -34,6 +35,7 @@ static void real_init_thread()
     while (true)
     {
         sleep(100);
+        printf("task is in user mode %d\n", counter++);
     }
 }
 
