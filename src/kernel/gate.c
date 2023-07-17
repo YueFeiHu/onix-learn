@@ -28,17 +28,27 @@ task_t *task = NULL;
 
 static u32 sys_test(u32 a)
 {
-    LOGK("syscall test... %d\n", a);
-    if (!task)
-    {
-        task = running_task();
-        task_block(task, NULL, TASK_BLOCKED);
-    }
-    else
-    {
-        task_unblock(task);
-        task = NULL;
-    }
+    char *ptr;
+    // LOGK("syscall test...\n");
+    BMB;
+
+    // ptr = (char *) 0x1600000;
+    // ptr[3] = 'T';
+
+    // BMB;
+
+    link_page(0x1600000);
+
+    BMB;
+
+    ptr = (char *) 0x1600000;
+    ptr[3] = 'T';
+    BMB;
+
+    unlink_page(0x1600000);
+    ptr[3] = 'T';
+
+    BMB;
     return 255;
 }
 

@@ -6,6 +6,12 @@
 #define PAGE_SIZE 0x1000     // 一页的大小 4K
 #define MEMORY_BASE 0x100000 // 1M，可用内存开始的位置
 
+// 内核占用的内存大小 8M
+#define KERNEL_MEMORY_SIZE 0x800000
+
+// 用户栈顶地址 128M
+#define USER_STACK_TOP 0x8000000
+
 typedef struct page_entry_t
 {
     u8 present : 1;  // 在内存中
@@ -26,4 +32,10 @@ void set_cr3(u32 pde);
 
 void free_kpage(u32 vaddr, u32 count);
 u32 alloc_kpage(u32 count);
+
+// 将 vaddr 映射物理内存
+void link_page(u32 vaddr);
+// 去掉 vaddr 对应的物理内存映射
+void unlink_page(u32 vaddr);
+
 #endif
