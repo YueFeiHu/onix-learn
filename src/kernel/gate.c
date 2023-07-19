@@ -42,6 +42,7 @@ int32 sys_write(fd_t fd, char *buf, u32 len)
     panic("write!!!!");
     return 0;
 }
+int32 sys_brk(void *addr);
 
 void syscall_init()
 {
