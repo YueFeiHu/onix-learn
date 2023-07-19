@@ -7,7 +7,7 @@
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
-#define SYSCALL_SIZE 64
+#define SYSCALL_SIZE 256
 
 handler_t syscall_table[SYSCALL_SIZE];
 
@@ -41,6 +41,7 @@ int32 sys_write(fd_t fd, char *buf, u32 len)
     panic("write!!!!");
     return 0;
 }
+int32 sys_brk(void *addr);
 
 void syscall_init()
 {
@@ -51,5 +52,6 @@ void syscall_init()
     syscall_table[SYS_NR_TEST]  = sys_test;
     syscall_table[SYS_NR_WRITE] = sys_write;
     syscall_table[SYS_NR_SLEEP]  = task_sleep;
+    syscall_table[SYS_NR_BRK]  = sys_brk;
     syscall_table[SYS_NR_YIELD] = task_yield;
 }

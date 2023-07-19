@@ -41,9 +41,11 @@ static void user_init_thread()
     while (true)
     {
         printf("task is in user mode %d\n", counter++);
-        // test_recursion();
+        char *ptr = (char *)0x900000;
+        brk(ptr);
+        *(ptr - 1) = 0xff;
+        brk((char *)0x800000);
         sleep(1000);
-        // printf("task is in user mode %d\n", counter++);
     }
 }
 
