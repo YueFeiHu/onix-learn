@@ -42,6 +42,8 @@ int32 sys_write(fd_t fd, char *buf, u32 len)
     return 0;
 }
 int32 sys_brk(void *addr);
+pid_t sys_getpid();
+pid_t sys_getppid();
 
 void syscall_init()
 {
@@ -52,6 +54,8 @@ void syscall_init()
     syscall_table[SYS_NR_TEST]  = sys_test;
     syscall_table[SYS_NR_WRITE] = sys_write;
     syscall_table[SYS_NR_SLEEP]  = task_sleep;
+    syscall_table[SYS_NR_GETPID] = sys_getpid;
+    syscall_table[SYS_NR_GETPPID] = sys_getppid;
     syscall_table[SYS_NR_BRK]  = sys_brk;
     syscall_table[SYS_NR_YIELD] = task_yield;
 }

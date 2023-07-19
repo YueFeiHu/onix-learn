@@ -40,11 +40,8 @@ static void user_init_thread()
     char ch;
     while (true)
     {
-        printf("task is in user mode %d\n", counter++);
-        char *ptr = (char *)0x900000;
-        brk(ptr);
-        *(ptr - 1) = 0xff;
-        brk((char *)0x800000);
+        printf("init thread %d %d %d...\n", getpid(), getppid(), counter++);
+        // printf("task is in user mode %d\n", counter++);
         sleep(1000);
     }
 }
@@ -61,7 +58,7 @@ void test_thread()
     u32 counter = 0;
     while (true)
     {
-        LOGK("test task %d....\n", counter++);
+        printf("test thread %d %d %d...\n", getpid(), getppid(), counter++);
         sleep(2000);
     }
 }
