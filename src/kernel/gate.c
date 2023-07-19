@@ -4,7 +4,6 @@
 #include <onix/syscall.h>
 #include <onix/task.h>
 #include <onix/console.h>
-#include <onix/memory.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 

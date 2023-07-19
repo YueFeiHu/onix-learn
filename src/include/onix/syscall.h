@@ -14,8 +14,6 @@ typedef enum syscall_t
 u32 test();
 void yield();
 void sleep(u32 ms);
-
 int32 brk(void *addr);
-
 int32 write(fd_t fd, char *buf, u32 len);
 #endif
