@@ -40,9 +40,21 @@ static void user_init_thread()
     char ch;
     while (true)
     {
-        printf("init thread %d %d %d...\n", getpid(), getppid(), counter++);
+        // test();
+        // printf("init thread %d %d %d...\n", getpid(), getppid(), counter++);
         // printf("task is in user mode %d\n", counter++);
-        sleep(1000);
+        pid_t pid = fork();
+
+        if (pid)
+        {
+            printf("fork after parent %d, %d, %d\n", pid, getpid(), getppid());
+        }
+        else
+        {
+            printf("fork after child %d, %d, %d\n", pid, getpid(), getppid());
+        }
+        hang();
+        sleep(100);
     }
 }
 
