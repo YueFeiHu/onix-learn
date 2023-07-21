@@ -17,6 +17,7 @@ extern void mapping_init();
 extern void syscall_init();
 extern void keyboard_init();
 extern void tss_init();
+extern void task_init();
 extern void arena_init();
 
 void intr_test()

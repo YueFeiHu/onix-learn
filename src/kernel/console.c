@@ -2,6 +2,7 @@
 #include <onix/io.h>
 #include <onix/string.h>
 #include <onix/interrupt.h>
+#include <onix/io.h>
 
 #define CRT_ADDR_REG 0x3D4 // CRT(6845)索引寄存器
 #define CRT_DATA_REG 0x3D5 // CRT(6845)数据寄存器
@@ -95,7 +96,7 @@ void console_clear()
     set_screen();
 
     u16 *ptr = (u16 *)MEM_BASE;
-    while (ptr < MEM_END)
+    while (ptr < (u16 *)MEM_END)
     {
         *ptr++ = erase;
     }

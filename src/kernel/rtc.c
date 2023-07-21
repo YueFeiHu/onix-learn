@@ -1,4 +1,4 @@
-
+#include <onix/rtc.h>
 #include <onix/types.h>
 #include <onix/debug.h>
 #include <onix/interrupt.h>

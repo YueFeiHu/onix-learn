@@ -25,7 +25,6 @@ static u32 KERNEL_PAGE_TABLE[] = {
     0x2000,
     0x3000,
 };
-#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))
 #define KERNEL_MAP_BITS 0x4000
 
 bitmap_t kernel_map;
@@ -253,13 +252,17 @@ static page_entry_t *get_pde()
 
 static page_entry_t *get_pte(u32 vaddr, bool create)
 {
+  // vaddr = 0x1600000
+  // 找到内核页表
   page_entry_t *pde = get_pde();
+  // idx = 5
   u32 idx = DIDX(vaddr);
+  // 找到页目录项，第五项 0x14，
   page_entry_t *entry = &pde[idx];
 
   assert(create || (!create && entry->present));
 
-  // 0xffc为页目录，0x14为页面索引，其内容为0x5
+  // 0xffc05000
   page_entry_t *table = (page_entry_t *)(PDE_MASK | (idx << 12));
 
   if (!entry->present)
@@ -271,7 +274,6 @@ static page_entry_t *get_pte(u32 vaddr, bool create)
     entry_init(entry, IDX(page));
     memset(table, 0, PAGE_SIZE);
   }
-
   return table;
 }
 
@@ -285,7 +287,6 @@ static void flush_tlb(u32 vaddr)
 
 void mapping_test()
 {
-  BMB;
 
   // 将 20 M 0x1400000 内存映射到 64M 0x4000000 的位置
 

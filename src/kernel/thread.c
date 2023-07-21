@@ -6,6 +6,7 @@
 #include <onix/printk.h>
 #include <onix/task.h>
 #include <onix/stdio.h>
+#include <onix/stdlib.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 

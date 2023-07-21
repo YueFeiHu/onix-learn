@@ -4,6 +4,7 @@
 #include <onix/printk.h>
 #include <onix/stdlib.h>
 #include <onix/assert.h>
+#include <onix/io.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 #define ENTRY_SIZE 0x30
