@@ -49,6 +49,9 @@ void unlink_page(u32 vaddr);
 
 page_entry_t *copy_pde();
 
+// 释放页目录
+void free_pde();
+
 // 系统调用 brk
 int32 sys_brk(void *addr);
 

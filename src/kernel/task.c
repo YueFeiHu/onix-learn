@@ -9,6 +9,9 @@
 #include <onix/list.h>
 #include <onix/global.h>
 #include <onix/arena.h>
+#include <onix/debug.h>
+
+#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
 #define NR_TASKS 64
 extern u32 volatile jiffies;
@@ -319,6 +322,35 @@ pid_t task_fork()
 
     task_build_statck(child);
     return child->pid;
+}
+
+void task_exit(int status)
+{
+    task_t *task = running_task();
+    // 当前进程没有阻塞，且正在执行
+    assert(task->node.next == NULL && task->node.prev == NULL && task->state == TASK_RUNNING);
+
+    task->state = TASK_DIED;
+    task->status = status;
+
+    free_pde();
+    free_kpage((u32)task->vmap->bits, 1);
+    kfree(task->vmap);
+    for (size_t i = 0; i < NR_TASKS; i++)
+    {
+        task_t *child = task_table[i];
+        if (!child)
+        {
+            continue;
+        }
+        if (child->ppid != task->pid)
+        {
+            continue;
+        }
+        child->ppid = task->ppid;
+    }
+    LOGK("task 0x%p exit....\n", task);
+    schedule();    
 }
 
 static void task_setup()

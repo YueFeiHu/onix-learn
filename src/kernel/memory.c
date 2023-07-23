@@ -476,6 +476,35 @@ page_entry_t *copy_pde()
   return pde;
 }
 
+void free_pde()
+{
+  task_t *task = running_task();
+  assert(task->uid != KERNEL_USER);
+  page_entry_t *pde = get_pde();
+  for (size_t didx = 2; didx < 1023; didx++)
+  {
+    page_entry_t *dentry = &pde[didx];
+    if (!dentry->present)
+    {
+      continue;
+    }
+    page_entry_t *pte = (page_entry_t *)(PDE_MASK | PAGE(didx));
+    for (size_t tidx = 0; tidx < 1024; tidx++)
+    {
+      page_entry_t *entry = &pte[tidx];
+      if (!entry->present)
+      {
+        continue;
+      }
+      assert(memory_map[entry->index] > 0);
+      put_page(PAGE(entry->index));
+    }
+    put_page(PAGE(dentry->index));
+  }
+  free_kpage(task->pde, 1);
+  LOGK("free pages %d\n", free_pages);
+}
+
 int32 sys_brk(void *addr)
 {
     LOGK("task brk 0x%p\n", addr);
@@ -491,11 +520,12 @@ int32 sys_brk(void *addr)
 
     if (old_brk > brk)
     {
-        for (; brk < old_brk; brk += PAGE_SIZE)
+        for (u32 page = brk; page < old_brk; page += PAGE_SIZE)
         {
-            unlink_page(brk);
+            unlink_page(page);
         }
     }
+    
     else if (IDX(brk - old_brk) > free_pages)
     {
         // out of memory
